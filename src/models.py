@@ -1,6 +1,5 @@
 from sqlalchemy import Integer, String, Date, Float, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from database import Base
 
 
@@ -11,38 +10,38 @@ class User(Base):
     login: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     registration_date: Mapped[Date] = mapped_column(Date, nullable=False)
 
-    credits: Mapped[list["Credit"]] = relationship(back_populates="user")
+    credits: Mapped[list["Credit"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
 class Credit(Base):
     __tablename__ = "Credits"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("Users.id"))
-    issuance_date: Mapped[Date] = mapped_column(Date)
-    return_date: Mapped[Date] = mapped_column(Date)
+    user_id: Mapped[int] = mapped_column(ForeignKey("Users.id", ondelete="CASCADE"))
+    issuance_date: Mapped[Date] = mapped_column(Date, nullable=False)
+    return_date: Mapped[Date] = mapped_column(Date, nullable=False)
     actual_return_date: Mapped[Date | None] = mapped_column(Date, nullable=True)
-    body: Mapped[float] = mapped_column(Float)
-    percent: Mapped[float] = mapped_column(Float)
+    body: Mapped[float] = mapped_column(Float, nullable=False)
+    percent: Mapped[float] = mapped_column(Float, nullable=False)
 
     user: Mapped["User"] = relationship(back_populates="credits")
-    payments: Mapped[list["Payment"]] = relationship(back_populates="credit")
+    payments: Mapped[list["Payment"]] = relationship(back_populates="credit", cascade="all, delete-orphan")
 
 
 class Dictionary(Base):
     __tablename__ = "Dictionary"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(100), unique=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
 
 
 class Plan(Base):
     __tablename__ = "Plans"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    period: Mapped[Date] = mapped_column(Date)
-    sum: Mapped[float] = mapped_column(Float)
-    category_id: Mapped[int] = mapped_column(ForeignKey("Dictionary.id"))
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    period: Mapped[Date] = mapped_column(Date, nullable=False)
+    sum: Mapped[float] = mapped_column(Float, nullable=False)
+    category_id: Mapped[int] = mapped_column(ForeignKey("Dictionary.id"), nullable=False)
 
     category: Mapped["Dictionary"] = relationship()
 
@@ -50,11 +49,11 @@ class Plan(Base):
 class Payment(Base):
     __tablename__ = "Payments"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    sum: Mapped[float] = mapped_column(Float)
-    payment_date: Mapped[Date] = mapped_column(Date)
-    credit_id: Mapped[int] = mapped_column(ForeignKey("Credits.id"))
-    type_id: Mapped[int] = mapped_column(ForeignKey("Dictionary.id"))
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    sum: Mapped[float] = mapped_column(Float, nullable=False)
+    payment_date: Mapped[Date] = mapped_column(Date, nullable=False)
+    credit_id: Mapped[int] = mapped_column(ForeignKey("Credits.id", ondelete="CASCADE"))
+    type_id: Mapped[int] = mapped_column(ForeignKey("Dictionary.id"), nullable=False)
 
     credit: Mapped["Credit"] = relationship(back_populates="payments")
     type: Mapped["Dictionary"] = relationship()
