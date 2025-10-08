@@ -17,7 +17,7 @@ class Credit(Base):
     __tablename__ = "Credits"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("Users.id", ondelete="CASCADE"))
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("Users.id", ondelete="SET NULL"), nullable=True)
     issuance_date: Mapped[Date] = mapped_column(Date, nullable=False)
     return_date: Mapped[Date] = mapped_column(Date, nullable=False)
     actual_return_date: Mapped[Date | None] = mapped_column(Date, nullable=True)
@@ -32,7 +32,7 @@ class Dictionary(Base):
     __tablename__ = "Dictionary"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
 
 
 class Plan(Base):
@@ -41,7 +41,7 @@ class Plan(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     period: Mapped[Date] = mapped_column(Date, nullable=False)
     sum: Mapped[float] = mapped_column(Float, nullable=False)
-    category_id: Mapped[int] = mapped_column(ForeignKey("Dictionary.id"), nullable=False)
+    category_id: Mapped[int | None] = mapped_column(ForeignKey("Dictionary.id", ondelete="SET NULL"), nullable=True)
 
     category: Mapped["Dictionary"] = relationship()
 
@@ -52,8 +52,8 @@ class Payment(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     sum: Mapped[float] = mapped_column(Float, nullable=False)
     payment_date: Mapped[Date] = mapped_column(Date, nullable=False)
-    credit_id: Mapped[int] = mapped_column(ForeignKey("Credits.id", ondelete="CASCADE"))
-    type_id: Mapped[int] = mapped_column(ForeignKey("Dictionary.id"), nullable=False)
+    credit_id: Mapped[int | None] = mapped_column(ForeignKey("Credits.id", ondelete="SET NULL"), nullable=True)
+    type_id: Mapped[int | None] = mapped_column(ForeignKey("Dictionary.id", ondelete="SET NULL"), nullable=True)
 
     credit: Mapped["Credit"] = relationship(back_populates="payments")
     type: Mapped["Dictionary"] = relationship()
