@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
 
 
-# Schemas to align input and output data with DB structure
+# Схеми для узгодження вхідних та вихідних даних зі структурою БД
 
 
 class UserBase(BaseModel):
