@@ -11,15 +11,12 @@ URL_DATABASE = os.getenv("DB_URL")
 
 
 engine = create_engine(URL_DATABASE, echo=True, future=True)
-
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False, future=True)
-
 
 class Base(DeclarativeBase):
     pass
 
 
-@contextmanager
 def get_db():
     db = SessionLocal()
     try:
