@@ -1,8 +1,11 @@
 from fastapi import FastAPI
+from src import routes, models
+from src.database import engine
 
-app = FastAPI(title="API HTTP Service to interact DB")
+# Створення таблиць у БД, якщо їх ще немає
+models.Base.metadata.create_all(bind=engine)
 
+app = FastAPI(title="Credits API")
 
-@app.get("/")
-def root():
-    return {"message": "Welcome to FastAPI!"}
+# Підключаємо роутер
+app.include_router(routes.router)
