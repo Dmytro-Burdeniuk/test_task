@@ -3,9 +3,6 @@ from src.routes import router as api_router
 from src import models
 from src.database import engine
 
-# Створення таблиць у БД, якщо їх ще немає
-models.Base.metadata.create_all(bind=engine)
-
 
 app = FastAPI(
     title="Credit Planner API",
@@ -15,3 +12,11 @@ app = FastAPI(
 
 # Підключення роутів
 app.include_router(api_router)
+
+
+# Створення таблиць тільки при прямому запуску, не при імпорті
+if __name__ == "__main__":
+    models.Base.metadata.create_all(bind=engine)
+
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
