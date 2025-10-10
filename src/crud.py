@@ -3,7 +3,8 @@ from sqlalchemy import func, extract
 from datetime import date, timedelta
 from typing import List
 
-from src import models, schemas_logic
+from src import models
+from src.schemas import schemas_logic
 
 
 def get_user_credits(db: Session, user_id: int) -> schemas_logic.UserCreditsResponse:
