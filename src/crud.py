@@ -136,86 +136,56 @@ def get_plans_performance(
     return response
 
 
-def get_year_performance(
-    db: Session, year: int
-) -> schemas_logic.YearPerformanceResponse:
+def get_year_performance(db: Session, year: int) -> schemas_logic.YearPerformanceResponse:
     response = []
+
+    # Знаходимо загальну суму видач та платежів за рік
+    total_issue_year = db.query(func.sum(models.Credit.body)) \
+        .filter(extract("year", models.Credit.issuance_date) == year).scalar() or 1
+    total_collect_year = db.query(func.sum(models.Payment.sum)) \
+        .join(models.Payment.type) \
+        .filter(extract("year", models.Payment.payment_date) == year).scalar() or 1
 
     for month in range(1, 13):
         period_start = date(year, month, 1)
-        if month == 12:
-            period_end = date(year, 12, 31)
-        else:
-            period_end = date(year, month + 1, 1) - timedelta(days=1)
+        period_end = date(year, month + 1, 1) - timedelta(days=1) if month < 12 else date(year, 12, 31)
 
+        # Видачі
         credits_query = db.query(models.Credit).filter(
             models.Credit.issuance_date >= period_start,
-            models.Credit.issuance_date <= period_end,
+            models.Credit.issuance_date <= period_end
         )
         credits_count = credits_query.count()
-        actual_issue_sum = (
-            credits_query.with_entities(func.sum(models.Credit.body)).scalar() or 0
-        )
+        actual_issue_sum = credits_query.with_entities(func.sum(models.Credit.body)).scalar() or 0
 
-        plan_issue_sum = (
-            db.query(func.sum(models.Plan.sum))
-            .join(models.Plan.category)
+        plan_issue_sum = db.query(func.sum(models.Plan.sum)) \
+            .join(models.Plan.category) \
             .filter(
                 extract("year", models.Plan.period) == year,
                 extract("month", models.Plan.period) == month,
-                models.Dictionary.name.ilike("видача"),
-            )
-            .scalar()
-            or 0
-        )
+                models.Dictionary.name.ilike("%видача%")
+            ).scalar() or 0
 
-        payments_query = (
-            db.query(models.Payment)
-            .join(models.Payment.type)
-            .filter(
-                models.Payment.payment_date >= period_start,
-                models.Payment.payment_date <= period_end,
-            )
+        issue_percent = (actual_issue_sum / plan_issue_sum * 100) if plan_issue_sum else 0
+        issue_share = actual_issue_sum / total_issue_year * 100
+
+        # Платежі
+        payments_query = db.query(models.Payment).join(models.Payment.type).filter(
+            models.Payment.payment_date >= period_start,
+            models.Payment.payment_date <= period_end
         )
         payments_count = payments_query.count()
-        actual_collect_sum = (
-            payments_query.with_entities(func.sum(models.Payment.sum)).scalar() or 0
-        )
+        actual_collect_sum = payments_query.with_entities(func.sum(models.Payment.sum)).scalar() or 0
 
-        plan_collect_sum = (
-            db.query(func.sum(models.Plan.sum))
-            .join(models.Plan.category)
+        plan_collect_sum = db.query(func.sum(models.Plan.sum)) \
+            .join(models.Plan.category) \
             .filter(
                 extract("year", models.Plan.period) == year,
                 extract("month", models.Plan.period) == month,
-                models.Dictionary.name.ilike("збір"),
-            )
-            .scalar()
-            or 0
-        )
+                models.Dictionary.name.ilike("%збір%")
+            ).scalar() or 0
 
-        issue_percent = (
-            (actual_issue_sum / plan_issue_sum * 100) if plan_issue_sum else 0
-        )
-        collect_percent = (
-            (actual_collect_sum / plan_collect_sum * 100) if plan_collect_sum else 0
-        )
-
-        total_issue_year = (
-            db.query(func.sum(models.Credit.body))
-            .filter(extract("year", models.Credit.issuance_date) == year)
-            .scalar()
-            or 1
-        )
-        total_collect_year = (
-            db.query(func.sum(models.Payment.sum))
-            .join(models.Payment.type)
-            .filter(extract("year", models.Payment.payment_date) == year)
-            .scalar()
-            or 1
-        )
-
-        issue_share = actual_issue_sum / total_issue_year * 100
+        collect_percent = (actual_collect_sum / plan_collect_sum * 100) if plan_collect_sum else 0
         collect_share = actual_collect_sum / total_collect_year * 100
 
         response.append(
@@ -233,4 +203,5 @@ def get_year_performance(
                 collect_share_percent=collect_share,
             )
         )
+
     return response
