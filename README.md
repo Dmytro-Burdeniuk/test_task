@@ -16,6 +16,7 @@
 
 ## Структура проекту
 
+```text
 src/
 │
 ├─ database.py # Налаштування SQLAlchemy та підключення до БД
@@ -29,6 +30,7 @@ src/
 │ ├─ reports.py # Endpoints для звітів
 │ └─ users.py # Endpoints для користувачів
 └─ main.py # FastAPI додаток та запуск сервера
+```
 
 ## Установка
 
